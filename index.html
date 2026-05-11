@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Atlas.Mapper</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div id="left-panel" class="panel">
+    <div class="panel-title">
+        <svg class="icon icon-xs" viewBox="0 0 16 16" fill="currentColor"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+        Atlas.Mapper
+    </div>
+
+    <!-- Asset Manager -->
+    <div class="section">
+        <label style="margin-bottom:6px;">Spritesheets</label>
+        <div class="row" style="margin-bottom:6px;">
+            <input type="file" id="file-input" accept="image/*" style="display:none;" multiple>
+            <button class="btn btn-info btn-sm" onclick="document.getElementById('file-input').click()">
+                <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>
+                Añadir Spritesheet
+            </button>
+        </div>
+        <!-- Lista dinámica de assets -->
+        <div id="asset-list" style="max-height:140px;overflow-y:auto;margin-top:2px;">
+            <div class="hint-empty">Sin spritesheets<br>Carga una imagen</div>
+        </div>
+        <div style="font-size:9px;color:#404055;margin-top:5px;text-align:center;">
+            Clic en el nombre = activar · ✕ = eliminar
+        </div>
+    </div>
+
+    <!-- Nueva animación -->
+    <div class="section">
+        <div class="row" style="margin-bottom:6px;">
+            <input type="text" id="new-anim-name" placeholder="Nombre (ej: fly_left)" style="flex:1;">
+            <select id="new-anim-type" style="flex:0 0 80px;">
+                <option value="simple">Simple</option>
+                <option value="loop">Loop</option>
+                <option value="held">Held</option>
+            </select>
+        </div>
+        <button class="btn btn-accent" onclick="addAnimation()">
+            <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+            Nueva Animación
+        </button>
+        <div style="margin-top:6px;font-size:10px;color:#383848;line-height:1.6;">
+            <span style="color:var(--phase-i-b);">●</span> Simple ·
+            <span style="color:var(--phase-l-b);">●</span> Loop ·
+            <span style="color:var(--phase-o-b);">●</span> Held <span style="color:#303040;">(intro→loop→outro)</span>
+        </div>
+    </div>
+
+    <!-- Lista de animaciones -->
+    <div class="panel-scroll" id="anim-list" style="padding:6px 8px;">
+        <div class="hint-empty">Añade una animación<br>para comenzar</div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="section flex-end">
+        <div class="row">
+            <button class="btn btn-info btn-sm" onclick="importJSON()">
+                <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z"/></svg>
+                Importar JSON
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="clearAll()">
+                <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/></svg>
+                Limpiar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN AREA -->
+<div id="main-area">
+
+    <div class="toolbar">
+        <button class="tool-btn active" id="tool-draw"    onclick="setMode('draw')"    title="D · Recortar frame">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M6.5 11.5a.5.5 0 0 0 1 0V8h3.5a.5.5 0 0 0 0-1H7.5V3.5a.5.5 0 0 0-1 0V7H3a.5.5 0 0 0 0 1h3.5v3.5z"/></svg>
+            Recortar
+        </button>
+        <button class="tool-btn" id="tool-select"   onclick="setMode('select')"   title="S · Seleccionar">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L5.57 10.694.803 8.652a.5.5 0 0 1-.006-.916l12.728-5.657a.5.5 0 0 1 .556.103z"/></svg>
+            Seleccionar
+        </button>
+        <button class="tool-btn" id="tool-editbox"  onclick="setMode('editbox')"  title="E · Editar cajas">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/></svg>
+            Editar caja
+        </button>
+        <button class="tool-btn" id="tool-pivot"    onclick="setMode('pivot')"    title="P · Pivote">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M8 13A5 5 0 1 1 8 3a5 5 0 0 1 0 10zm0 1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"/><path d="M9.5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/></svg>
+            Pivote
+        </button>
+        <button class="tool-btn" id="tool-pan"      onclick="setMode('pan')"      title="H · Mover vista">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M10.5 4a1.5 1.5 0 0 0-3 0v4.46l-1.63-.78A1.5 1.5 0 0 0 3.5 9l3.5 3.5v2h6v-6.54l-2.5-1.16z"/></svg>
+            Mover
+        </button>
+        <div class="tb-divider"></div>
+        <button class="tool-btn" onclick="runAutoSlice()" style="background:#101a2a;border-color:#1a3050;" title="Auto-detectar sprites">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 2.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm4 4a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm-8 4a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm8 4a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/></svg>
+            Auto-Slice
+        </button>
+        <div class="tb-divider"></div>
+        <button class="tool-btn" id="tool-hurtbox"  onclick="setMode('hurtbox')" title="Hurtbox" style="color:#2ecc71;">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm1 0v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1z"/></svg>
+            Hurtbox
+        </button>
+        <button class="tool-btn" id="tool-hitbox"   onclick="setMode('hitbox')"  title="Hitbox" style="color:#e74c3c;">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2z"/><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+            Hitbox
+        </button>
+        <div class="tb-divider"></div>
+        <span style="font-size:10px;color:var(--dim);">Zoom</span>
+        <button class="tool-btn zoom-btn" onclick="changeZoom(-0.25)">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor" style="margin:0;"><path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/></svg>
+        </button>
+        <span id="zoom-label" style="font-size:11px;min-width:36px;text-align:center;font-family:monospace;">100%</span>
+        <button class="tool-btn zoom-btn" onclick="changeZoom(0.25)">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor" style="margin:0;"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+        </button>
+        <button class="tool-btn zoom-btn" onclick="resetZoom()" title="Reset zoom">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor" style="margin:0;"><path d="M1.5 1h13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0V2h-4v10.5a.5.5 0 0 1-1 0V2h-4v1.5a.5.5 0 0 1-1 0v-2a.5.5 0 0 1 .5-.5z"/></svg>
+        </button>
+    </div>
+
+    <div id="canvas-wrapper">
+        <canvas id="main-canvas"></canvas>
+        <div id="drop-overlay">Suelta aquí (imagen o JSON)</div>
+        <div id="canvas-info"></div>
+        <div id="mode-indicator" class="mode-indicator"></div>
+    </div>
+
+    <div id="timeline-strip">
+        <div id="timeline-header">
+            <span id="tl-anim-label" style="font-size:11px;font-weight:800;color:var(--accent);letter-spacing:0.5px;">SIN ANIMACIÓN</span>
+            <span id="tl-phase-legend" style="font-size:10px;color:var(--dim);"></span>
+            <div style="flex:1;"></div>
+            <button class="tool-btn btn-sm" onclick="duplicateActiveFrame()" title="Ctrl+D">
+                <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/></svg>
+                Dup
+            </button>
+            <button class="tool-btn btn-sm" onclick="removeSelectedFrame()" style="color:#e88;" title="Del">
+                <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/></svg>
+                Del
+            </button>
+        </div>
+        <div id="timeline-frames">
+            <div class="tl-empty">Selecciona una animación y recorta sprites en el canvas</div>
+        </div>
+    </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="right-panel" class="panel">
+    <div class="panel-title">Previsualización &amp; Propiedades</div>
+    <div id="rp-tabs">
+        <button class="rp-tab active" data-tab="atlas"   onclick="switchRPTab('atlas')">
+            <svg class="icon icon-xs" viewBox="0 0 16 16" fill="currentColor"><path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5z"/></svg>
+            Atlas
+        </button>
+        <button class="rp-tab" data-tab="hitbox"  onclick="switchRPTab('hitbox')">
+            <svg class="icon icon-xs" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+            Boxes
+        </button>
+        <button class="rp-tab" data-tab="moveset" onclick="switchRPTab('moveset')">
+            <svg class="icon icon-xs" viewBox="0 0 16 16" fill="currentColor"><path d="m11.354 3.646.646.647.646-.647a.5.5 0 1 1 .708.708l-.646.647.646.646a.5.5 0 0 1-.708.708l-.646-.647-.647.647a.5.5 0 0 1-.707-.707l.646-.647-.646-.647a.5.5 0 1 1 .708-.708z"/></svg>
+            Moveset
+        </button>
+        <button class="rp-tab" data-tab="char"    onclick="switchRPTab('char')">
+            <svg class="icon icon-xs" viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
+            Char
+        </button>
+    </div>
+
+    <div id="preview-wrap">
+        <div id="pv-coords">X: 0, Y: 0</div>
+        <canvas id="preview-canvas" width="200" height="170"></canvas>
+        <div class="px-line-h"></div>
+        <div class="px-line-v"></div>
+        <div id="preview-controls">
+            <button class="pv-btn" id="pv-play" onclick="togglePlay()">
+                <svg class="icon icon-xs" viewBox="0 0 16 16" fill="currentColor"><path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/></svg>
+                <span id="pv-play-text">Play</span>
+            </button>
+            <button class="pv-btn" id="pv-hold" onmousedown="startHold()" onmouseup="endHold()" ontouchstart="startHold()" ontouchend="endHold()">
+                <svg class="icon icon-xs" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>
+                Hold
+            </button>
+            <button class="pv-btn" onclick="resetPreview()">
+                <svg class="icon icon-xs" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- TAB: ATLAS -->
+    <div id="rp-tab-atlas" class="panel-scroll rp-tab-content tab-visible">
+        <div class="prop-group" id="anim-props" style="display:none;">
+            <div class="prop-label">Animación Activa</div>
+            <div class="row" style="margin-bottom:6px;">
+                <div><label>FPS</label><input type="number" id="prop-fps" min="1" max="60" value="12" onchange="updateAnimProp()"></div>
+                <div><label>Tipo</label>
+                    <select id="prop-type" onchange="updateAnimProp()">
+                        <option value="simple">Simple</option>
+                        <option value="loop">Loop</option>
+                        <option value="held">Held</option>
+                    </select>
+                </div>
+            </div>
+            <div><label>Next Anim (al terminar)</label><input type="text" id="prop-next" placeholder="ej: idle" onchange="updateAnimProp()"></div>
+        </div>
+
+        <div id="phase-controls" class="prop-group" style="display:none;">
+            <div class="prop-label">Fases · Held <span style="font-size:10px;color:var(--dim);">Frame: <span id="sel-frame-idx">—</span></span></div>
+            <div class="phase-row"><div class="phase-pip" style="background:var(--phase-i-b);"></div><span class="phase-name">Intro</span><span class="phase-count" style="font-size:9px;color:#303048;">idx 0</span></div>
+            <div class="phase-row">
+                <div class="phase-pip" style="background:var(--phase-l-b);"></div>
+                <span class="phase-name">Loop</span>
+                <div style="display:flex;align-items:center;gap:4px;">
+                    <label style="margin:0;white-space:nowrap;">desde</label>
+                    <input type="number" id="prop-loop-start" min="0" value="1" onchange="updateAnimProp()" style="width:46px;padding:3px 5px;font-size:11px;">
+                </div>
+            </div>
+            <div class="phase-row">
+                <div class="phase-pip" style="background:var(--phase-o-b);"></div>
+                <span class="phase-name">Outro</span>
+                <div style="display:flex;align-items:center;gap:4px;">
+                    <label style="margin:0;white-space:nowrap;">desde</label>
+                    <input type="number" id="prop-outro-start" min="0" value="2" onchange="updateAnimProp()" style="width:46px;padding:3px 5px;font-size:11px;">
+                </div>
+            </div>
+            <div style="margin-top:7px;display:flex;gap:4px;">
+                <button class="btn btn-info btn-sm" onclick="setPhaseMarker('loop')" style="flex:1;">⟶ Loop aquí</button>
+                <button class="btn btn-info btn-sm" onclick="setPhaseMarker('outro')" style="flex:1;">⟶ Outro aquí</button>
+            </div>
+        </div>
+
+        <div class="prop-group" id="frame-props" style="display:none;">
+            <div class="prop-label">Frame Base · Pivote</div>
+            <div class="row" style="margin-bottom:5px;">
+                <div><label>Pivot X</label><input type="number" id="prop-px" onchange="updateSelectedPivot()"></div>
+                <div><label>Pivot Y</label><input type="number" id="prop-py" onchange="updateSelectedPivot()"></div>
+            </div>
+            <button class="btn btn-info btn-sm" onclick="resetSelectedPivot()">
+                <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+                Centro-Abajo
+            </button>
+        </div>
+
+        <div class="prop-group" id="tl-frame-props" style="display:none;">
+            <div class="prop-label">Frame · Propiedades Timeline</div>
+            <div style="margin-bottom:5px;"><label>Eventos (coma separado)</label><input type="text" id="prop-events" placeholder="play_sound, spawn_hitbox" onchange="updateTLFrameProps()"></div>
+            <div><label>Duración override (ms · vacío = fps global)</label><input type="number" id="prop-duration" placeholder="auto" min="0" onchange="updateTLFrameProps()"></div>
+        </div>
+
+        <div class="prop-group">
+            <button class="btn btn-export" onclick="exportJSON()" style="margin-bottom:12px;width:100%;">
+                <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                Exportar atlas.json
+            </button>
+            <button class="btn btn-info" onclick="exportMovesetJSON()">
+                <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                Exportar moveset.json
+            </button>
+        </div>
+
+        <div style="padding:10px;font-size:10px;color:#303048;line-height:1.8;">
+            <span style="color:#404055;">Atajos:</span> D=Recortar · S=Seleccionar · E=Editar caja<br>
+            P=Pivote · H=Mover · Rueda=Zoom · Del=Eliminar<br>
+            Ctrl+D=Duplicar · ←→ Navegar timeline
+        </div>
+    </div>
+
+    <!-- TAB: HITBOXES -->
+    <div id="rp-tab-hitbox" class="rp-tab-content">
+        <div class="hint-empty">Selecciona un frame<br>en la timeline primero</div>
+    </div>
+
+    <!-- TAB: MOVESET -->
+    <div id="rp-tab-moveset" class="rp-tab-content">
+        <div class="hint-empty">Cargando moveset…</div>
+    </div>
+
+    <!-- TAB: CHARACTER -->
+    <div id="rp-tab-char" class="rp-tab-content">
+        <div class="hint-empty">Cargando config…</div>
+    </div>
+</div>
+
+<!-- Tooltips y modales -->
+<div id="ctx-menu"></div>
+
+<div id="box-edit-tooltip" class="box-edit-tooltip" style="display:none;">
+    <div class="bet-row">
+        <span class="bet-label">X</span><input type="number" id="bet-x" class="bet-input">
+        <span class="bet-label">Y</span><input type="number" id="bet-y" class="bet-input">
+        <span class="bet-label">W</span><input type="number" id="bet-w" class="bet-input" min="1">
+        <span class="bet-label">H</span><input type="number" id="bet-h" class="bet-input" min="1">
+    </div>
+    <div class="bet-actions">
+        <button class="btn btn-info btn-sm" onclick="applyBoxEdit()">
+            <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+            Aplicar
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSelectedBox()">✕ Borrar</button>
+        <button class="btn btn-sm" onclick="closeBoxEditTooltip()" style="background:#1a1a22;border:1px solid #2a2a3a;color:var(--dim);">✕</button>
+    </div>
+</div>
+
+<!-- Módulo principal ES6 -->
+<script type="module" src="js/main.js"></script>
+
+<!-- Panels secundarios (hitbox, moveset, char) se cargan inline como módulos -->
+<script type="module" src="js/panels.js"></script>
+</body>
+</html>

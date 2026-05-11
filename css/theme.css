@@ -1,0 +1,48 @@
+/* THEME — Variables, reset, base */
+:root {
+    --bg: #0b0b0d;
+    --panel: #111116;
+    --panel2: #18181f;
+    --border: #222230;
+    --border2: #2a2a3a;
+    --accent: #e85d04;
+    --accent2: #ff8c00;
+    --text: #c8c8d8;
+    --dim: #666680;
+    --phase-i: #1a4a7a;
+    --phase-i-b: #3498db;
+    --phase-l: #1a4a2a;
+    --phase-l-b: #2ecc71;
+    --phase-o: #5a2200;
+    --phase-o-b: #e67e22;
+    --sel: #2ecc71;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    display: grid;
+    grid-template-columns: 300px 1fr 290px;
+    grid-template-rows: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a50; }
+
+/* Icons */
+.icon { display:inline-block; vertical-align:text-bottom; width:13px; height:13px; margin-right:4px; fill:currentColor; }
+.icon-sm { width:11px; height:11px; margin-right:3px; }
+.icon-xs { width:9px;  height:9px;  margin-right:2px; }
+
+/* Misc */
+.hint-empty { font-size:11px; color:#303040; text-align:center; padding:20px 12px; line-height:1.7; }
+.flex-end { margin-top:auto; }
