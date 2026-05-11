@@ -17,6 +17,26 @@
         Atlas.Mapper
     </div>
 
+    <!-- Projects -->
+    <div class="section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--dim);">Proyecto</span>
+            <span id="active-project-label" style="font-size:11px;color:var(--accent);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">Sin guardar</span>
+        </div>
+        <div style="display:flex; gap:5px; margin-bottom:6px;">
+            <button class="btn btn-info btn-sm" style="width:auto; flex:1;" onclick="projectNew()" title="Nuevo Proyecto">
+                <i class="bi bi-file-earmark-plus icon-sm"></i> Nuevo
+            </button>
+            <button class="btn btn-accent btn-sm" style="width:auto; flex:1;" onclick="projectSave()" title="Guardar">
+                <i class="bi bi-floppy icon-sm"></i> Guardar
+            </button>
+            <button class="btn btn-info btn-sm" style="width:auto; padding:3px 8px; flex-shrink:0;" onclick="projectSaveAs()" title="Guardar Como...">
+                <i class="bi bi-files icon-sm" style="margin:0;"></i>
+            </button>
+        </div>
+        <div id="project-list" style="max-height:130px;overflow-y:auto;"></div>
+    </div>
+
     <!-- Asset Manager -->
     <div class="section">
         <label style="margin-bottom:6px;">Spritesheets</label>

@@ -24,6 +24,7 @@ export const state = {
     // Cajas de colisión
     selectedCollisionBox: null, // { type: 'hitbox'|'hurtbox', idx }
     activeBoxType: null,
+    activeProject: null,
 
     // Moveset
     movesetConfig: [],
@@ -65,7 +66,7 @@ export function saveToLocal() {
     // Guardamos metadatos de assets (no las imágenes, son binarios)
     const assetsMeta = {};
     for (const id in assets) {
-        assetsMeta[id] = { fileName: assets[id].fileName };
+        assetsMeta[id] = { fileName: assets[id].fileName, dataUrl: assets[id].dataUrl };
     }
     try {
         localStorage.setItem('atlas_backup', JSON.stringify({
@@ -86,11 +87,19 @@ export function loadFromLocal() {
         // Reconstruimos entradas de asset sin imágenes (quedan como pendientes)
         if (data.assetsMeta) {
             for (const id in data.assetsMeta) {
+                const meta = data.assetsMeta[id];
+                const img = new Image();
                 state.assets[id] = {
-                    fileName: data.assetsMeta[id].fileName,
-                    imgObject: new Image(),
-                    url: null
+                    fileName: meta.fileName,
+                    imgObject: img,
+                    url: meta.dataUrl || null,
+                    dataUrl: meta.dataUrl || null
                 };
+                if (meta.dataUrl) {
+                    // Cuando termine de cargar de la caché, forzamos un redibujado
+                    img.onload = () => { if (window.__refreshMainCanvas) window.__refreshMainCanvas(); };
+                    img.src = meta.dataUrl;
+                }
             }
             state.activeAssetId = data.activeAssetId || null;
         }

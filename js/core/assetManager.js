@@ -12,7 +12,7 @@ function genId() { return 'asset_' + Date.now().toString(36); }
 export function loadImageFile(file, assetId = null) {
     const id = assetId || genId();
 
-    if (state.assets[id] && state.assets[id].url) {
+    if (state.assets[id] && state.assets[id].url && state.assets[id].url.startsWith('blob:')) {
         URL.revokeObjectURL(state.assets[id].url);
     }
 
@@ -20,8 +20,19 @@ export function loadImageFile(file, assetId = null) {
     const img = new Image();
 
     img.onload = () => {
-        state.assets[id] = { fileName: file.name, imgObject: img, url };
+        state.assets[id] = { fileName: file.name, imgObject: img, url, dataUrl: null };
         state.activeAssetId = id;
+        
+        // Leer como Base64 para guardarlo en la caché local nativa
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (state.assets[id]) {
+                state.assets[id].dataUrl = e.target.result;
+                saveToLocal(); // Guardar de forma permanente
+            }
+        };
+        reader.readAsDataURL(file);
+
         saveToLocal();
         updateUI();
         drawMainCanvas();
@@ -31,7 +42,7 @@ export function loadImageFile(file, assetId = null) {
     img.src = url;
     // Entrada optimista inmediata para que el panel la muestre como "cargando"
     if (!state.assets[id]) {
-        state.assets[id] = { fileName: file.name, imgObject: img, url: null };
+        state.assets[id] = { fileName: file.name, imgObject: img, url: null, dataUrl: null };
     }
     renderAssetPanel();
 }
@@ -94,8 +105,8 @@ export function renderAssetPanel() {
         el.innerHTML = `
             <span class="asset-dot" style="color:${act ? 'var(--accent)' : 'var(--dim)'};">▶</span>
             <span class="asset-name" title="${a.fileName}">${a.fileName}</span>
-            <button class="btn btn-danger btn-sm" style="padding:1px 5px;flex-shrink:0;"
-                    onclick="event.stopPropagation();window.__assetMgr.removeAsset('${id}')">✕</button>
+            <button class="tool-btn btn-sm" style="color:#e88; padding:2px 6px; flex-shrink:0;"
+                    onclick="event.stopPropagation();window.__assetMgr.removeAsset('${id}')" title="Eliminar spritesheet">✕</button>
         `;
         el.addEventListener('click', () => setActiveAsset(id));
         container.appendChild(el);

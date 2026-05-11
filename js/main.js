@@ -15,6 +15,8 @@ import { selectTLFrame, addFrameToTL, removeSelectedFrame,
 import { exportJSON, exportMovesetJSON, exportCharJSON }     from './io/exporter.js';
 import { importJSON, loadJSONFile, importMovesetJSON,
          clearAll }                                          from './io/importer.js';
+import { listProjects, saveProject, loadProject,
+         deleteProject, newProject } from './core/projectManager.js';
 
 // Estado de dibujo (compartido con renderer)
 window.__drawState = { isDrawing:false, startX:0, startY:0, curX:0, curY:0 };
@@ -58,6 +60,81 @@ function dupeAnim(name) {
     while (state.animations[n]) n = name + '_copy' + i++;
     state.animations[n] = JSON.parse(JSON.stringify(state.animations[name]));
     setActiveAnim(n); saveToLocal();
+}
+
+// Project management
+
+export function renderProjectPanel() {
+    const label   = document.getElementById('active-project-label');
+    const listEl  = document.getElementById('project-list');
+    if (!label || !listEl) return;
+
+    label.textContent = state.activeProject || 'Sin guardar';
+    const projects = listProjects();
+    listEl.innerHTML = '';
+
+    if (!projects.length) {
+        listEl.innerHTML = '<div class="hint-empty" style="padding:10px 0;">Sin proyectos guardados</div>';
+        return;
+    }
+
+    projects.forEach(({ name, savedAt, charName }) => {
+        const isAct = state.activeProject === name;
+        const dateObj = savedAt ? new Date(savedAt) : null;
+        const date  = dateObj ? dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '—';
+        
+        const el    = document.createElement('div');
+        el.className = 'project-item' + (isAct ? ' active' : '');
+        el.innerHTML = `
+            <span style="color:${isAct ? 'var(--accent)' : 'var(--dim)'}; font-size:10px;">▶</span>
+            <div class="project-info">
+                <span class="project-name" title="${name}">${name}${charName && charName !== name ? ' · ' + charName : ''}</span>
+                <span class="project-date">${date}</span>
+            </div>
+            <button class="tool-btn btn-sm" style="color:#e88; padding:2px 6px; flex-shrink:0;"
+                onclick="event.stopPropagation();projectDelete('${name}')" title="Eliminar proyecto">✕</button>
+        `;
+        el.addEventListener('click', () => projectLoad(name));
+        listEl.appendChild(el);
+    });
+}
+
+function projectNew() {
+    if (!confirm('¿Nuevo proyecto? Se perderán los cambios no guardados.')) return;
+    newProject();
+    renderAssetPanel();
+    updateUI();
+    renderProjectPanel();
+}
+
+function projectSave() {
+    if (!state.activeProject) { projectSaveAs(); return; }
+    saveProject(state.activeProject);
+    renderProjectPanel();
+}
+
+function projectSaveAs() {
+    const name = prompt('Nombre del proyecto:', state.charConfig.name || 'nuevo_personaje');
+    if (!name || !name.trim()) return;
+    const key = name.trim().replace(/\s+/g, '_');
+    saveProject(key);
+    renderProjectPanel();
+}
+
+function projectLoad(name) {
+    if (state.activeProject && state.activeProject !== name) {
+        if (!confirm(`¿Cargar "${name}"? Guarda primero si tienes cambios.`)) return;
+    }
+    if (!loadProject(name)) { alert('No se pudo cargar el proyecto.'); return; }
+    renderAssetPanel();
+    updateUI();
+    renderProjectPanel();
+}
+
+function projectDelete(name) {
+    if (!confirm(`¿Eliminar "${name}"?`)) return;
+    deleteProject(name);
+    renderProjectPanel();
 }
 
 // Tool mode
@@ -354,6 +431,9 @@ function clearAllBoxes() {
 
 // Exponer al HTML (sin bundler)
 Object.assign(window, {
+    // Proyectos
+    projectNew, projectSave, projectSaveAs, projectLoad, projectDelete,
+    renderProjectPanel,
     // Animaciones
     addAnimation, setActiveAnim, setMode,
     changeZoom, resetZoom, runAutoSlice,
@@ -372,9 +452,10 @@ Object.assign(window, {
     // Tabs
     switchRPTab,
 });
-
+window.__refreshMainCanvas = drawMainCanvas;
 // Init
 loadFromLocal();
 renderAssetPanel();
 updateUI();
 switchRPTab('atlas');
+renderProjectPanel();
