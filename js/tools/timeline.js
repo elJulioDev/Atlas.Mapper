@@ -160,7 +160,7 @@ export function renderTimelineStrip() {
 
     const hint = document.createElement('div');
     hint.className = 'tl-add-hint';
-    hint.innerHTML = '<svg class="icon" style="margin:0;" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>';
+    hint.innerHTML = '<i class="bi bi-plus" style="margin:0;font-size:18px;color:#303040;"></i>';
     container.appendChild(hint);
 
     if (state.selectedTLIndex !== null) {
@@ -236,7 +236,7 @@ function showCtxMenu(e, idx) {
 
     ctxMenu.innerHTML = `
         <div class="ctx-item" onclick="ctxAction(()=>{window.__tl.selectTLFrame(${idx});window.__tl.duplicateActiveFrame();})">
-            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
+            <i class="bi bi-copy icon"></i>
             Duplicar frame
         </div>
         ${anim && anim.type==='held' ? `
@@ -249,7 +249,7 @@ function showCtxMenu(e, idx) {
         </div>` : ''}
         <div class="ctx-sep"></div>
         <div class="ctx-item danger" onclick="ctxAction(()=>{window.__tl.selectTLFrame(${idx});window.__tl.removeSelectedFrame();})">
-            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/></svg>
+            <i class="bi bi-trash3 icon"></i>
             Eliminar frame
         </div>
     `;
@@ -289,10 +289,10 @@ function renderAnimList() {
                 </div>
                 <div style="display:flex;gap:3px;flex-shrink:0;">
                     <button class="tool-btn btn-sm" onclick="event.stopPropagation();window.__anims.dupeAnim('${name}')" title="Duplicar">
-                        <svg class="icon icon-sm" style="margin:0;" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
+                        <i class="bi bi-copy" style="margin:0;font-size:11px;"></i>
                     </button>
                     <button class="tool-btn btn-sm" style="color:#e88;" onclick="event.stopPropagation();window.__anims.deleteAnim('${name}')" title="Eliminar">
-                        <svg class="icon icon-sm" style="margin:0;" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/></svg>
+                        <i class="bi bi-trash3" style="margin:0;font-size:11px;"></i>
                     </button>
                 </div>
             </div>

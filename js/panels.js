@@ -38,15 +38,15 @@ function renderHitboxPanel() {
     bulk.style.gap = '4px';
     bulk.innerHTML = `
         <button class="btn btn-info btn-sm" onclick="window.__panels.copyBoxesToNext()">
-            <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/></svg>
+            <i class="bi bi-copy icon-sm"></i>
             Copiar al frame siguiente
         </button>
         <button class="btn btn-info btn-sm" onclick="window.__panels.copyBoxesToAll()">
-            <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2H2a2 2 0 0 1-2-2V2z"/></svg>
+            <i class="bi bi-files icon-sm"></i>
             Copiar a todos los frames
         </button>
         <button class="btn btn-danger btn-sm" onclick="window.__panels.clearAllBoxes()">
-            <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/></svg>
+            <i class="bi bi-trash3 icon-sm"></i>
             Limpiar todas las cajas
         </button>
     `;
@@ -163,7 +163,7 @@ function renderMovesetPanel() {
     header.innerHTML = `
         <div class="prop-label">Lista de Movimientos</div>
         <button class="btn btn-accent btn-sm" onclick="window.__panels.addMove()" style="width:100%;">
-            <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+            <i class="bi bi-plus-lg icon-sm"></i>
             Añadir Movimiento
         </button>
     `;
@@ -189,11 +189,11 @@ function renderMovesetPanel() {
     exp.innerHTML = `
         <div style="display:flex;gap:5px;">
             <button class="btn btn-info btn-sm" onclick="importMovesetJSON()" style="flex:1;">
-                <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z"/></svg>
+                <i class="bi bi-folder2-open icon-sm"></i>
                 Importar
             </button>
             <button class="btn btn-export btn-sm" onclick="exportMovesetJSON()" style="flex:1;">
-                <svg class="icon icon-sm" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                <i class="bi bi-download icon-sm"></i>
                 Exportar
             </button>
         </div>
@@ -353,7 +353,7 @@ function renderCharPanel() {
     exp.className = 'export-section';
     exp.innerHTML = `
         <button class="btn btn-export" onclick="exportCharJSON()">
-            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+            <i class="bi bi-download icon"></i>
             Exportar char.json
         </button>
         <div class="json-struct">

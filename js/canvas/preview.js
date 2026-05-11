@@ -31,14 +31,15 @@ export function togglePlay() {
     const btn = document.getElementById('pv-play');
     const txt = document.getElementById('pv-play-text');
     btn.classList.toggle('active', pvPlaying);
+    const icon = btn.querySelector('i');
     if (pvPlaying) {
         pvIdx = 0; pvState = 'playing';
         txt.textContent = 'Stop';
-        btn.querySelector('svg').innerHTML = '<path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/>';
+        icon.className = 'bi bi-stop-fill icon-xs';
     } else {
         pvState = 'idle';
         txt.textContent = 'Play';
-        btn.querySelector('svg').innerHTML = '<path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>';
+        icon.className = 'bi bi-play-fill icon-xs';
     }
 }
 
@@ -64,7 +65,7 @@ export function resetPreview() {
     const txt = document.getElementById('pv-play-text');
     pb.classList.remove('active');
     txt.textContent = 'Play';
-    pb.querySelector('svg').innerHTML = '<path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>';
+    pb.querySelector('i').className = 'bi bi-play-fill icon-xs';
     document.getElementById('pv-hold').classList.remove('holding', 'active');
     pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
 }
@@ -177,7 +178,7 @@ function _stopPlay() {
     const txt = document.getElementById('pv-play-text');
     pb.classList.remove('active');
     txt.textContent = 'Play';
-    pb.querySelector('svg').innerHTML = '<path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>';
+    pb.querySelector('i').className = 'bi bi-play-fill icon-xs';
 }
 
 requestAnimationFrame(renderPreview);
