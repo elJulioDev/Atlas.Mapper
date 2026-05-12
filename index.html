@@ -17,73 +17,101 @@
         Atlas.Mapper
     </div>
 
-    <!-- Projects -->
-    <div class="section">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--dim);">Proyecto</span>
-            <span id="active-project-label" style="font-size:11px;color:var(--accent);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">Sin guardar</span>
+    <!-- Projects (colapsable) -->
+    <div class="section section-collapsible" id="sec-projects">
+        <div class="section-header" onclick="toggleSection('projects')">
+            <span class="section-header-label">
+                <i class="bi bi-folder2 icon-sm"></i>
+                Proyecto
+            </span>
+            <div class="section-header-right">
+                <span id="active-project-label" class="section-badge" onclick="event.stopPropagation()">Sin guardar</span>
+                <i class="bi bi-chevron-down section-chevron" id="chev-projects"></i>
+            </div>
         </div>
-        <div style="display:flex; gap:5px; margin-bottom:6px;">
-            <button class="btn btn-info btn-sm" style="width:auto; flex:1;" onclick="projectNew()" title="Nuevo Proyecto">
-                <i class="bi bi-file-earmark-plus icon-sm"></i> Nuevo
-            </button>
-            <button class="btn btn-accent btn-sm" style="width:auto; flex:1;" onclick="projectSave()" title="Guardar">
-                <i class="bi bi-floppy icon-sm"></i> Guardar
-            </button>
-            <button class="btn btn-info btn-sm" style="width:auto; padding:3px 8px; flex-shrink:0;" onclick="projectSaveAs()" title="Guardar Como...">
-                <i class="bi bi-files icon-sm" style="margin:0;"></i>
-            </button>
+        <div class="section-body" id="body-projects">
+            <div style="display:flex; gap:5px; margin-bottom:6px; margin-top:2px;">
+                <button class="btn btn-info btn-sm" style="width:auto; flex:1;" onclick="projectNew()" title="Nuevo Proyecto">
+                    <i class="bi bi-file-earmark-plus icon-sm"></i> Nuevo
+                </button>
+                <button class="btn btn-accent btn-sm" style="width:auto; flex:1;" onclick="projectSave()" title="Guardar">
+                    <i class="bi bi-floppy icon-sm"></i> Guardar
+                </button>
+                <button class="btn btn-info btn-sm" style="width:auto; padding:3px 8px; flex-shrink:0;" onclick="projectSaveAs()" title="Guardar Como...">
+                    <i class="bi bi-files icon-sm" style="margin:0;"></i>
+                </button>
+            </div>
+            <div id="project-list" class="scrollable-list" style="max-height:110px;"></div>
         </div>
-        <div id="project-list" style="max-height:130px;overflow-y:auto;"></div>
     </div>
 
-    <!-- Asset Manager -->
-    <div class="section">
-        <label style="margin-bottom:6px;">Spritesheets</label>
-        <div class="row" style="margin-bottom:6px;">
+    <!-- Asset Manager (colapsable) -->
+    <div class="section section-collapsible" id="sec-assets">
+        <div class="section-header" onclick="toggleSection('assets')">
+            <span class="section-header-label">
+                <i class="bi bi-images icon-sm"></i>
+                Spritesheets
+            </span>
+            <div class="section-header-right">
+                <span id="asset-count-badge" class="section-badge" style="display:none;">0</span>
+                <button class="btn-icon-inline" onclick="event.stopPropagation();document.getElementById('file-input').click();" title="Añadir spritesheet">
+                    <i class="bi bi-plus-lg" style="margin:0;"></i>
+                </button>
+                <i class="bi bi-chevron-down section-chevron" id="chev-assets"></i>
+            </div>
+        </div>
+        <div class="section-body" id="body-assets">
             <input type="file" id="file-input" accept="image/*" style="display:none;" multiple>
-            <button class="btn btn-info btn-sm" onclick="document.getElementById('file-input').click()">
-                <i class="bi bi-upload icon"></i>
-                Añadir Spritesheet
+            <div id="asset-list" class="scrollable-list" style="max-height:110px;margin-top:4px;">
+                <div class="hint-empty">Sin spritesheets<br>Carga una imagen</div>
+            </div>
+            <div style="font-size:9px;color:#404055;margin-top:4px;text-align:center;">
+                Clic = activar · ✕ = eliminar
+            </div>
+        </div>
+    </div>
+
+    <!-- Nueva animación (colapsable) -->
+    <div class="section section-collapsible" id="sec-newanim">
+        <div class="section-header" onclick="toggleSection('newanim')">
+            <span class="section-header-label">
+                <i class="bi bi-plus-circle icon-sm"></i>
+                Nueva Animación
+            </span>
+            <i class="bi bi-chevron-down section-chevron" id="chev-newanim"></i>
+        </div>
+        <div class="section-body" id="body-newanim">
+            <div class="row" style="margin-bottom:6px;margin-top:2px;">
+                <input type="text" id="new-anim-name" placeholder="Nombre (ej: fly_left)" style="flex:1;">
+                <select id="new-anim-type" style="flex:0 0 78px;">
+                    <option value="simple">Simple</option>
+                    <option value="loop">Loop</option>
+                    <option value="held">Held</option>
+                </select>
+            </div>
+            <button class="btn btn-accent" onclick="addAnimation()">
+                <i class="bi bi-plus-lg icon-sm"></i>
+                Crear
             </button>
-        </div>
-        <!-- Lista dinámica de assets -->
-        <div id="asset-list" style="max-height:140px;overflow-y:auto;margin-top:2px;">
-            <div class="hint-empty">Sin spritesheets<br>Carga una imagen</div>
-        </div>
-        <div style="font-size:9px;color:#404055;margin-top:5px;text-align:center;">
-            Clic en el nombre = activar · ✕ = eliminar
+            <div style="margin-top:5px;font-size:10px;color:#383848;line-height:1.6;">
+                <span style="color:var(--phase-i-b);">●</span> Simple ·
+                <span style="color:var(--phase-l-b);">●</span> Loop ·
+                <span style="color:var(--phase-o-b);">●</span> Held
+            </div>
         </div>
     </div>
 
-    <!-- Nueva animación -->
-    <div class="section">
-        <div class="row" style="margin-bottom:6px;">
-            <input type="text" id="new-anim-name" placeholder="Nombre (ej: fly_left)" style="flex:1;">
-            <select id="new-anim-type" style="flex:0 0 80px;">
-                <option value="simple">Simple</option>
-                <option value="loop">Loop</option>
-                <option value="held">Held</option>
-            </select>
-        </div>
-        <button class="btn btn-accent" onclick="addAnimation()">
-            <i class="bi bi-plus-lg icon-sm"></i>
-            Nueva Animación
-        </button>
-        <div style="margin-top:6px;font-size:10px;color:#383848;line-height:1.6;">
-            <span style="color:var(--phase-i-b);">●</span> Simple ·
-            <span style="color:var(--phase-l-b);">●</span> Loop ·
-            <span style="color:var(--phase-o-b);">●</span> Held <span style="color:#303040;">(intro→loop→outro)</span>
-        </div>
+    <!-- Lista de animaciones — siempre visible, flex:1 -->
+    <div class="section-anim-header">
+        <span><i class="bi bi-collection-play icon-sm"></i>Animaciones</span>
+        <span id="anim-count-label" style="font-size:10px;color:var(--dim);font-family:monospace;"></span>
     </div>
-
-    <!-- Lista de animaciones -->
-    <div class="panel-scroll" id="anim-list" style="padding:6px 8px;">
+    <div class="panel-scroll" id="anim-list" style="flex:1;padding:5px 7px;">
         <div class="hint-empty">Añade una animación<br>para comenzar</div>
     </div>
 
     <!-- Acciones -->
-    <div class="section flex-end">
+    <div class="section flex-end" style="padding:7px 10px;">
         <div class="row">
             <button class="btn btn-info btn-sm" onclick="importJSON()">
                 <i class="bi bi-folder2-open icon-sm"></i>
@@ -320,8 +348,62 @@
 
 <!-- Módulo principal ES6 -->
 <script type="module" src="js/main.js"></script>
-
-<!-- Panels secundarios (hitbox, moveset, char) se cargan inline como módulos -->
 <script type="module" src="js/panels.js"></script>
+
+<!-- Sistema de secciones colapsables -->
+<script>
+(function() {
+    const STORE_KEY = 'atlas_sections_collapsed';
+
+    function _load() {
+        try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
+        catch { return {}; }
+    }
+    function _save(state) {
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch {}
+    }
+
+    window.toggleSection = function(id) {
+        const body  = document.getElementById('body-' + id);
+        const chev  = document.getElementById('chev-' + id);
+        const state = _load();
+
+        const isCollapsed = body.classList.toggle('collapsed');
+        chev.classList.toggle('rotated', isCollapsed);
+        state[id] = isCollapsed;
+        _save(state);
+    };
+
+    // Restaurar estado guardado al cargar
+    document.addEventListener('DOMContentLoaded', function() {
+        const state = _load();
+        ['projects', 'assets', 'newanim'].forEach(id => {
+            if (state[id]) {
+                const body = document.getElementById('body-' + id);
+                const chev = document.getElementById('chev-' + id);
+                if (body) body.classList.add('collapsed');
+                if (chev) chev.classList.add('rotated');
+            }
+        });
+    });
+
+    // Actualizar badge de cantidad de assets
+    const _origRenderAssetPanel = window.renderAssetPanel;
+    function patchAssetCount() {
+        const badge = document.getElementById('asset-count-badge');
+        if (!badge) return;
+        // Observar cambios en asset-list
+        const target = document.getElementById('asset-list');
+        if (!target) return;
+        const obs = new MutationObserver(() => {
+            const count = target.querySelectorAll('.asset-item').length;
+            badge.style.display = count > 0 ? 'inline-block' : 'none';
+            badge.textContent = count;
+        });
+        obs.observe(target, { childList: true, subtree: false });
+    }
+    document.addEventListener('DOMContentLoaded', patchAssetCount);
+})();
+</script>
 </body>
 </html>

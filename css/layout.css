@@ -2,6 +2,13 @@
 .panel { background:var(--panel); display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--border); }
 #right-panel { border-right:none; border-left:1px solid var(--border); }
 
+/* Panel izquierdo: las secciones colapsables son flex-shrink:0,
+   el anim-list (#anim-list) toma el espacio restante con flex:1.
+   Las secciones colapsadas liberan espacio automáticamente. */
+#left-panel {
+    min-height: 0; /* necesario para que flex:1 funcione dentro del panel */
+}
+
 .panel-title {
     padding:10px 12px 8px; font-size:10px; font-weight:800;
     letter-spacing:1.5px; text-transform:uppercase; color:var(--accent);
