@@ -75,7 +75,8 @@ function _applyJSON(data) {
                 type: a.type || (a.loop ? 'loop' : 'simple'),
                 next_anim: a.next_anim || '',
                 loop_start: 1, outro_start: 2,
-                timeline: []
+                timeline: [],
+                base_hurtboxes: a.base_hurtboxes || []
             };
             const parseSeq = arr => (arr||[]).map(f => ({
                 frameId:  f.frame_id,

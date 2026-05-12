@@ -111,19 +111,27 @@ export function drawMainCanvas() {
 }
 
 function drawCollisionBoxes(tlf, pivotX, pivotY) {
-    const scb = state.selectedCollisionBox;
-    // Hurtboxes
-    (tlf.hurtboxes || []).forEach((box, i) => {
-        const sel = scb && scb.type === 'hurtbox' && scb.idx === i;
-        ctx.fillStyle   = sel ? 'rgba(46,204,113,0.55)' : 'rgba(46,204,113,0.35)';
-        ctx.strokeStyle = sel ? '#00ff88' : '#2ecc71';
+    const scb      = state.selectedCollisionBox;
+    const anim     = state.activeAnim ? state.animations[state.activeAnim] : null;
+    const baseHrt  = anim?.base_hurtboxes || [];
+    const frameHrt = tlf.hurtboxes || [];
+    const useBase  = frameHrt.length === 0 && baseHrt.length > 0;
+    const hurtboxes = useBase ? baseHrt : frameHrt;
+
+    hurtboxes.forEach((box, i) => {
+        const selType = useBase ? 'base_hurtbox' : 'hurtbox';
+        const sel     = scb && scb.type === selType && scb.idx === i;
+        ctx.fillStyle   = sel ? 'rgba(46,204,113,0.5)' : 'rgba(46,204,113,0.2)';
+        ctx.strokeStyle = sel ? '#00ff88' : (useBase ? '#1a7a40' : '#2ecc71');
         ctx.lineWidth   = sel ? 2 : 1;
+        if (useBase) ctx.setLineDash([4, 3]);
         ctx.fillRect(pivotX + box.x, pivotY + box.y, box.w, box.h);
         ctx.strokeRect(pivotX + box.x + .5, pivotY + box.y + .5, box.w, box.h);
+        ctx.setLineDash([]);
         if (sel && state.currentMode === 'editbox') drawBoxHandles(pivotX + box.x, pivotY + box.y, box.w, box.h, '#00ff88');
         ctx.lineWidth = 1;
     });
-    // Hitboxes
+
     (tlf.hitboxes || []).forEach((box, i) => {
         const sel = scb && scb.type === 'hitbox' && scb.idx === i;
         ctx.fillStyle   = sel ? 'rgba(231,76,60,0.55)' : 'rgba(231,76,60,0.35)';

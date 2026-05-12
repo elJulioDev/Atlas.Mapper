@@ -17,112 +17,231 @@ function renderHitboxPanel() {
     const tlf  = anim && anim.timeline[state.selectedTLIndex];
     if (!tlf) { container.innerHTML = '<div class="hint-empty">Frame inválido</div>'; return; }
 
-    const hurtboxes = tlf.hurtboxes || [];
-    const hitboxes  = tlf.hitboxes  || [];
+    if (!anim.base_hurtboxes) anim.base_hurtboxes = [];
+    if (!tlf.hitboxes)  tlf.hitboxes  = [];
+    if (!tlf.hurtboxes) tlf.hurtboxes = [];
 
     container.innerHTML = '';
 
-    // Hurtboxes
-    const hrtSection = _makeBoxSection('hurtbox', hurtboxes, '#2ecc71');
+    // Sync mode
+    const syncEl = document.createElement('div');
+    syncEl.className = 'prop-group';
+    syncEl.style.cssText = 'padding:6px 10px;';
+    syncEl.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--dim);">Sync Hurtboxes</span>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0;">
+                <span style="font-size:10px;color:${state.hurtboxSyncMode ? '#e67e22' : 'var(--dim)'};">
+                    ${state.hurtboxSyncMode ? '⚡ ON' : 'OFF'}
+                </span>
+                <input type="checkbox" ${state.hurtboxSyncMode ? 'checked' : ''}
+                    onchange="window.__panels.toggleSyncMode(this.checked)"
+                    style="width:auto;cursor:pointer;">
+            </label>
+        </div>
+        ${state.hurtboxSyncMode ? '<div style="font-size:9px;color:#e67e22;margin-top:3px;">Editar hurtbox actualiza todos los frames</div>' : ''}
+    `;
+    container.appendChild(syncEl);
+
+    // Base hurtboxes (animación)
+    const baseSection = document.createElement('div');
+    baseSection.className = 'prop-group';
+    const baseHeader = document.createElement('div');
+    baseHeader.className = 'prop-label';
+    baseHeader.innerHTML = `<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#0d4020;border:1px dashed #2ecc71;margin-right:5px;vertical-align:middle;"></span>Hurtboxes Base · Animación</span>`;
+    const addBaseBtn = document.createElement('button');
+    addBaseBtn.className = 'btn btn-info btn-sm';
+    addBaseBtn.style.cssText = 'padding:1px 7px;font-size:10px;';
+    addBaseBtn.innerHTML = '+ Añadir';
+    addBaseBtn.onclick = () => window.__panels.addBaseHurtbox();
+    baseHeader.appendChild(addBaseBtn);
+    baseSection.appendChild(baseHeader);
+
+    if (!anim.base_hurtboxes.length) {
+        const hint = document.createElement('div');
+        hint.style.cssText = 'font-size:10px;color:#303040;padding:4px 0;';
+        hint.textContent = 'Sin base. Cada frame gestiona las suyas.';
+        baseSection.appendChild(hint);
+    } else {
+        anim.base_hurtboxes.forEach((box, idx) => {
+            const scb   = state.selectedCollisionBox;
+            const isSel = scb && scb.type === 'base_hurtbox' && scb.idx === idx;
+            const row   = document.createElement('div');
+            row.className = 'box-row' + (isSel ? ' box-row-selected' : '');
+            row.style.borderLeft = '2px dashed #1a7a40';
+            row.innerHTML = `
+                <span class="hurtbox-label" style="font-size:10px;font-weight:800;min-width:18px;">${idx}</span>
+                <span class="box-coords">${box.x}, ${box.y} · ${box.w}×${box.h}</span>
+                <button class="tool-btn btn-sm" title="Seleccionar" onclick="window.__panels.selectBaseHurtbox(${idx})" style="padding:2px 5px;">✎</button>
+                <button class="tool-btn btn-sm" style="color:#e88;padding:2px 5px;" onclick="window.__panels.removeBaseHurtbox(${idx})">✕</button>
+            `;
+            baseSection.appendChild(row);
+        });
+        const baseBulk = document.createElement('div');
+        baseBulk.style.cssText = 'display:flex;gap:4px;margin-top:6px;';
+        baseBulk.innerHTML = `
+            <button class="btn btn-info btn-sm" style="flex:1;" title="Sobrescribe hurtboxes de todos los frames con la base"
+                onclick="window.__panels.applyBaseToAll()">↓ Aplicar a todos</button>
+            <button class="btn btn-info btn-sm" style="flex:1;" title="Copia las hurtboxes del frame actual como base"
+                onclick="window.__panels.setFrameAsBase()">↑ Usar frame</button>
+        `;
+        baseSection.appendChild(baseBulk);
+    }
+    container.appendChild(baseSection);
+
+    // Hurtboxes del frame
+    const frameHasHurt = tlf.hurtboxes.length > 0;
+    const usingBase    = !frameHasHurt && anim.base_hurtboxes.length > 0;
+
+    const hrtSection = document.createElement('div');
+    hrtSection.className = 'prop-group';
+    const hrtHeader = document.createElement('div');
+    hrtHeader.className = 'prop-label';
+    hrtHeader.innerHTML = `<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2ecc71;margin-right:5px;vertical-align:middle;"></span>Hurtboxes · Frame ${state.selectedTLIndex}</span>`;
+    if (!usingBase) {
+        const addHrtBtn = document.createElement('button');
+        addHrtBtn.className = 'btn btn-info btn-sm';
+        addHrtBtn.style.cssText = 'padding:1px 7px;font-size:10px;';
+        addHrtBtn.innerHTML = '+ Añadir';
+        addHrtBtn.onclick = () => _addBox('hurtbox');
+        hrtHeader.appendChild(addHrtBtn);
+    }
+    hrtSection.appendChild(hrtHeader);
+
+    if (usingBase) {
+        const hint = document.createElement('div');
+        hint.style.cssText = 'font-size:10px;color:#1a7a40;padding:4px 0;line-height:1.5;';
+        hint.innerHTML = '↑ Usando hurtboxes base (dashed en canvas)<br><span style="color:#303040;">Añade o dibuja para sobrescribir.</span>';
+        hrtSection.appendChild(hint);
+        if (anim.base_hurtboxes.length > 0) {
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'btn btn-info btn-sm';
+            copyBtn.style.marginTop = '5px';
+            copyBtn.innerHTML = '↓ Copiar base a este frame';
+            copyBtn.onclick = () => window.__panels.copyBaseToFrame();
+            hrtSection.appendChild(copyBtn);
+        }
+    } else {
+        tlf.hurtboxes.forEach((box, idx) => {
+            const scb   = state.selectedCollisionBox;
+            const isSel = scb && scb.type === 'hurtbox' && scb.idx === idx;
+            const row   = document.createElement('div');
+            row.className = 'box-row' + (isSel ? ' box-row-selected' : '');
+            row.innerHTML = `
+                <span class="hurtbox-label" style="font-size:10px;font-weight:800;min-width:18px;">${idx}</span>
+                <span class="box-coords">${box.x}, ${box.y} · ${box.w}×${box.h}</span>
+                <button class="tool-btn btn-sm" title="Editar" onclick="window.selectBox('hurtbox',${idx})" style="padding:2px 5px;">✎</button>
+                <button class="tool-btn btn-sm" style="color:#e88;padding:2px 5px;" onclick="window.removeBox('hurtbox',${idx})">✕</button>
+            `;
+            row.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') return; window.selectBox('hurtbox', idx); });
+            hrtSection.appendChild(row);
+        });
+        if (!tlf.hurtboxes.length) {
+            const hint = document.createElement('div');
+            hint.style.cssText = 'font-size:10px;color:#303040;padding:4px 0;';
+            hint.textContent = 'Sin hurtboxes. Dibuja en canvas o pulsa + Añadir.';
+            hrtSection.appendChild(hint);
+        }
+        if (frameHasHurt && anim.base_hurtboxes.length > 0) {
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'btn btn-info btn-sm';
+            clearBtn.style.marginTop = '5px';
+            clearBtn.innerHTML = '↑ Revertir a base';
+            clearBtn.onclick = () => window.__panels.revertToBase();
+            hrtSection.appendChild(clearBtn);
+        }
+    }
     container.appendChild(hrtSection);
 
     // Hitboxes
-    const hitSection = _makeBoxSection('hitbox', hitboxes, '#e74c3c');
+    const hitSection = _makeBoxSection('hitbox', tlf.hitboxes, '#e74c3c');
     container.appendChild(hitSection);
 
     // Acciones bulk
     const bulk = document.createElement('div');
     bulk.className = 'prop-group';
-    bulk.style.display = 'flex';
-    bulk.style.flexDirection = 'column';
-    bulk.style.gap = '4px';
+    bulk.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
     bulk.innerHTML = `
         <button class="btn btn-info btn-sm" onclick="window.__panels.copyBoxesToNext()">
-            <i class="bi bi-copy icon-sm"></i>
-            Copiar al frame siguiente
+            <i class="bi bi-copy icon-sm"></i>Copiar al siguiente
         </button>
         <button class="btn btn-info btn-sm" onclick="window.__panels.copyBoxesToAll()">
-            <i class="bi bi-files icon-sm"></i>
-            Copiar a todos los frames
+            <i class="bi bi-files icon-sm"></i>Copiar a todos
         </button>
         <button class="btn btn-danger btn-sm" onclick="window.__panels.clearAllBoxes()">
-            <i class="bi bi-trash3 icon-sm"></i>
-            Limpiar todas las cajas
+            <i class="bi bi-trash3 icon-sm"></i>Limpiar cajas frame
         </button>
     `;
     container.appendChild(bulk);
 }
 
-function _makeBoxSection(type, boxes, color) {
-    const label  = type === 'hitbox' ? 'Hitboxes (daño)' : 'Hurtboxes (recibe daño)';
-    const dot    = `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};margin-right:5px;"></span>`;
-    const sect   = document.createElement('div');
-    sect.className = 'prop-group';
+// Funciones nuevas para base hurtboxes
 
-    const header = document.createElement('div');
-    header.className = 'prop-label';
-    header.innerHTML = dot + label;
-
-    const addBtn = document.createElement('button');
-    addBtn.className = 'btn btn-info btn-sm';
-    addBtn.style.cssText = 'padding:1px 7px;font-size:10px;';
-    addBtn.innerHTML = '+ Añadir';
-    addBtn.onclick = () => _addBox(type);
-    header.appendChild(addBtn);
-
-    sect.appendChild(header);
-
-    if (!boxes.length) {
-        const hint = document.createElement('div');
-        hint.style.cssText = 'font-size:10px;color:#303040;padding:4px 0;';
-        hint.textContent = 'Sin cajas. Dibuja en el canvas o pulsa + Añadir.';
-        sect.appendChild(hint);
-    } else {
-        boxes.forEach((box, idx) => {
-            const scb  = state.selectedCollisionBox;
-            const isSel = scb && scb.type === type && scb.idx === idx;
-            const row  = document.createElement('div');
-            row.className = 'box-row' + (isSel ? ' box-row-selected' : '');
-            row.innerHTML = `
-                <span class="${type}-label" style="font-size:10px;font-weight:800;min-width:18px;">${idx}</span>
-                <span class="box-coords">${box.x}, ${box.y} · ${box.w}×${box.h}</span>
-                <button class="tool-btn btn-sm" title="Editar"
-                    onclick="window.selectBox('${type}',${idx})" style="padding:2px 5px;">✎</button>
-                <button class="tool-btn btn-sm" title="Borrar" style="color:#e88;padding:2px 5px;"
-                    onclick="window.removeBox('${type}',${idx})">✕</button>
-            `;
-            row.addEventListener('click', e => {
-                if (e.target.tagName === 'BUTTON') return;
-                window.selectBox(type, idx);
-            });
-            sect.appendChild(row);
-        });
-    }
-    return sect;
+function addBaseHurtbox() {
+    if (!state.activeAnim) return;
+    const anim = state.animations[state.activeAnim];
+    if (!anim.base_hurtboxes) anim.base_hurtboxes = [];
+    anim.base_hurtboxes.push({ x: -20, y: -80, w: 40, h: 80 });
+    state.selectedCollisionBox = { type: 'base_hurtbox', idx: anim.base_hurtboxes.length - 1 };
+    if (state.currentMode !== 'editbox' && window.setMode) window.setMode('editbox');
+    drawMainCanvas(); renderHitboxPanel(); saveToLocal();
 }
 
-function _addBox(type) {
+function selectBaseHurtbox(idx) {
+    state.selectedCollisionBox = { type: 'base_hurtbox', idx };
+    if (state.currentMode !== 'editbox' && window.setMode) window.setMode('editbox');
+    if (window.showBoxEditTooltip) window.showBoxEditTooltip();
+    drawMainCanvas(); renderHitboxPanel();
+}
+
+function removeBaseHurtbox(idx) {
+    if (!state.activeAnim) return;
+    const anim = state.animations[state.activeAnim];
+    if (!anim.base_hurtboxes) return;
+    anim.base_hurtboxes.splice(idx, 1);
+    if (state.selectedCollisionBox?.type === 'base_hurtbox') state.selectedCollisionBox = null;
+    drawMainCanvas(); renderHitboxPanel(); saveToLocal();
+}
+
+function applyBaseToAll() {
+    if (!state.activeAnim) return;
+    const anim = state.animations[state.activeAnim];
+    if (!anim.base_hurtboxes?.length) { alert('Sin hurtboxes base.'); return; }
+    if (!confirm('¿Copiar base a TODOS los frames?')) return;
+    const copy = JSON.parse(JSON.stringify(anim.base_hurtboxes));
+    anim.timeline.forEach(t => { t.hurtboxes = JSON.parse(JSON.stringify(copy)); });
+    drawMainCanvas(); renderHitboxPanel(); saveToLocal();
+}
+
+function setFrameAsBase() {
+    if (!state.activeAnim || state.selectedTLIndex === null) return;
+    const anim = state.animations[state.activeAnim];
+    const tlf  = anim.timeline[state.selectedTLIndex];
+    if (!tlf.hurtboxes?.length) { alert('Frame sin hurtboxes.'); return; }
+    anim.base_hurtboxes = JSON.parse(JSON.stringify(tlf.hurtboxes));
+    drawMainCanvas(); renderHitboxPanel(); saveToLocal();
+}
+
+function copyBaseToFrame() {
+    if (!state.activeAnim || state.selectedTLIndex === null) return;
+    const anim = state.animations[state.activeAnim];
+    const tlf  = anim.timeline[state.selectedTLIndex];
+    tlf.hurtboxes = JSON.parse(JSON.stringify(anim.base_hurtboxes || []));
+    drawMainCanvas(); renderHitboxPanel(); saveToLocal();
+}
+
+function revertToBase() {
     if (!state.activeAnim || state.selectedTLIndex === null) return;
     const tlf = state.animations[state.activeAnim].timeline[state.selectedTLIndex];
-    if (!tlf.hitboxes)  tlf.hitboxes  = [];
-    if (!tlf.hurtboxes) tlf.hurtboxes = [];
-    const arr = type === 'hitbox' ? tlf.hitboxes : tlf.hurtboxes;
-    arr.push({ x: -20, y: -40, w: 40, h: 40 });
-    state.selectedCollisionBox = { type, idx: arr.length - 1 };
-    drawMainCanvas();
-    renderHitboxPanel();
-    saveToLocal();
+    tlf.hurtboxes = [];
+    if (state.selectedCollisionBox?.type === 'hurtbox') state.selectedCollisionBox = null;
+    if (window.hideBoxEditTooltip) window.hideBoxEditTooltip();
+    drawMainCanvas(); renderHitboxPanel(); saveToLocal();
 }
 
-function copyBoxesToNext() {
-    if (!state.activeAnim || state.selectedTLIndex === null) return;
-    const tl   = state.animations[state.activeAnim].timeline;
-    const next = state.selectedTLIndex + 1;
-    if (next >= tl.length) { alert('No hay siguiente frame.'); return; }
-    const src = tl[state.selectedTLIndex];
-    tl[next].hitboxes  = JSON.parse(JSON.stringify(src.hitboxes  || []));
-    tl[next].hurtboxes = JSON.parse(JSON.stringify(src.hurtboxes || []));
-    saveToLocal(); alert('✓ Cajas copiadas al frame ' + next + '.');
+function toggleSyncMode(checked) {
+    state.hurtboxSyncMode = checked;
+    renderHitboxPanel();
 }
 
 function copyBoxesToAll() {
@@ -457,4 +576,8 @@ window.__panels = {
     // Char
     addTransformation, removeTransformation,
     updateChar, updateStat, updateTransField,
+    // nuevas:
+    addBaseHurtbox, selectBaseHurtbox, removeBaseHurtbox,
+    applyBaseToAll, setFrameAsBase, copyBaseToFrame,
+    revertToBase, toggleSyncMode,
 };

@@ -6,19 +6,30 @@ import { canvas, drawMainCanvas,
 
 const HANDLE_SIZE = 6;
 
-let isDraggingBox  = false;
-let isResizingBox  = false;
-let dragBoxOffset  = { x:0, y:0 };
-let resizeHandle   = null;
-let boxDragStart   = null;
+let isDraggingBox = false;
+let isResizingBox = false;
+let dragBoxOffset = { x: 0, y: 0 };
+let resizeHandle  = null;
+let boxDragStart  = null;
 
-// Hit-test
+// Resuelve el box actualmente seleccionado desde cualquier fuente
+function _getActiveBox() {
+    const scb = state.selectedCollisionBox;
+    if (!scb) return null;
+    if (scb.type === 'base_hurtbox') {
+        const anim = state.activeAnim ? state.animations[state.activeAnim] : null;
+        return anim?.base_hurtboxes?.[scb.idx] ?? null;
+    }
+    const tlf = getBoxesForCurrentFrame();
+    if (!tlf) return null;
+    const arr = scb.type === 'hitbox' ? tlf.hitboxes : tlf.hurtboxes;
+    return arr?.[scb.idx] ?? null;
+}
 
 export function hitTestBox(box, pivotX, pivotY, cx, cy) {
     const bx = pivotX + box.x;
     const by = pivotY + box.y;
     const hs = HANDLE_SIZE / state.currentZoom;
-
     const handles = {
         nw:[bx-hs/2, by-hs/2], n:[bx+box.w/2-hs/2, by-hs/2], ne:[bx+box.w-hs/2, by-hs/2],
         e:[bx+box.w-hs/2, by+box.h/2-hs/2], se:[bx+box.w-hs/2, by+box.h-hs/2],
@@ -32,42 +43,46 @@ export function hitTestBox(box, pivotX, pivotY, cx, cy) {
     return null;
 }
 
-// Mouse handlers para editbox mode
-
 export function onEditBoxMouseDown(p) {
     const pivot = getPivotForCurrentFrame();
     const tlf   = getBoxesForCurrentFrame();
     if (!pivot || !tlf) return;
 
+    const anim    = state.activeAnim ? state.animations[state.activeAnim] : null;
+    const baseHrt = anim?.base_hurtboxes || [];
+    const useBase = (tlf.hurtboxes || []).length === 0 && baseHrt.length > 0;
+
+    const sources = [
+        { type: 'hitbox',                              arr: tlf.hitboxes  || [] },
+        { type: useBase ? 'base_hurtbox' : 'hurtbox', arr: useBase ? baseHrt : (tlf.hurtboxes || []) }
+    ];
+
     let found = false;
-    for (const [type, arr] of [['hitbox', tlf.hitboxes||[]], ['hurtbox', tlf.hurtboxes||[]]]) {
+    outer: for (const { type, arr } of sources) {
         for (let i = arr.length - 1; i >= 0; i--) {
             const hit = hitTestBox(arr[i], pivot.px, pivot.py, p.x, p.y);
-            if (hit) {
-                state.selectedCollisionBox = { type, idx: i };
-                if (hit === 'body') {
-                    isDraggingBox = true;
-                    dragBoxOffset = { x: p.x - (pivot.px + arr[i].x), y: p.y - (pivot.py + arr[i].y) };
-                } else {
-                    isResizingBox = true; resizeHandle = hit;
-                    const b = arr[i];
-                    boxDragStart = { x: pivot.px+b.x, y: pivot.py+b.y, w:b.w, h:b.h, bx:b.x, by:b.y, bw:b.w, bh:b.h, mx:p.x, my:p.y };
-                }
-                showBoxEditTooltip(); drawMainCanvas(); found = true; break;
+            if (!hit) continue;
+            state.selectedCollisionBox = { type, idx: i };
+            if (hit === 'body') {
+                isDraggingBox = true;
+                dragBoxOffset = { x: p.x - (pivot.px + arr[i].x), y: p.y - (pivot.py + arr[i].y) };
+            } else {
+                isResizingBox = true; resizeHandle = hit;
+                const b = arr[i];
+                boxDragStart = { bx:b.x, by:b.y, bw:b.w, bh:b.h, mx:p.x, my:p.y };
             }
+            showBoxEditTooltip(); drawMainCanvas(); found = true; break outer;
         }
-        if (found) break;
     }
     if (!found) { state.selectedCollisionBox = null; hideBoxEditTooltip(); drawMainCanvas(); }
 }
 
 export function onEditBoxMouseMove(p) {
     if (!isDraggingBox && !isResizingBox) return;
-    const tlf   = getBoxesForCurrentFrame();
     const pivot = getPivotForCurrentFrame();
-    if (!tlf || !pivot || !state.selectedCollisionBox) return;
-    const arr = state.selectedCollisionBox.type === 'hitbox' ? tlf.hitboxes : tlf.hurtboxes;
-    const b   = arr[state.selectedCollisionBox.idx];
+    if (!pivot) return;
+    const b = _getActiveBox();
+    if (!b) return;
 
     if (isDraggingBox) {
         b.x = p.x - pivot.px - dragBoxOffset.x;
@@ -88,29 +103,29 @@ export function onEditBoxMouseUp() {
     if (!isDraggingBox && !isResizingBox) return;
     isDraggingBox = isResizingBox = false;
     resizeHandle = boxDragStart = null;
+    if (state.hurtboxSyncMode && state.selectedCollisionBox?.type === 'hurtbox') _syncHurtboxes();
     saveToLocal();
-    // Notifica al panel de hitboxes
     if (typeof window.__renderHitboxPanel === 'function') window.__renderHitboxPanel();
     showBoxEditTooltip();
 }
 
-// Tooltip de edición
+function _syncHurtboxes() {
+    if (!state.activeAnim || state.selectedTLIndex === null) return;
+    const tl   = state.animations[state.activeAnim].timeline;
+    const copy = JSON.parse(JSON.stringify(tl[state.selectedTLIndex].hurtboxes || []));
+    tl.forEach((t, i) => { if (i !== state.selectedTLIndex) t.hurtboxes = copy; });
+}
 
 export function showBoxEditTooltip() {
     if (!state.selectedCollisionBox) return;
-    const tlf = getBoxesForCurrentFrame();
-    if (!tlf) return;
-    const arr = state.selectedCollisionBox.type === 'hitbox' ? tlf.hitboxes : tlf.hurtboxes;
-    const b   = arr && arr[state.selectedCollisionBox.idx];
+    const b = _getActiveBox();
     if (!b) return;
-
     const tip = document.getElementById('box-edit-tooltip');
     document.getElementById('bet-x').value = b.x;
     document.getElementById('bet-y').value = b.y;
     document.getElementById('bet-w').value = b.w;
     document.getElementById('bet-h').value = b.h;
     tip.style.display = 'flex';
-
     const canvasRect = canvas.getBoundingClientRect();
     const pivot = getPivotForCurrentFrame();
     if (pivot) {
@@ -126,26 +141,29 @@ export function hideBoxEditTooltip() {
 }
 
 export function applyBoxEdit() {
-    if (!state.selectedCollisionBox) return;
-    const tlf = getBoxesForCurrentFrame();
-    if (!tlf) return;
-    const arr = state.selectedCollisionBox.type === 'hitbox' ? tlf.hitboxes : tlf.hurtboxes;
-    const b   = arr && arr[state.selectedCollisionBox.idx];
+    const b = _getActiveBox();
     if (!b) return;
     b.x = parseInt(document.getElementById('bet-x').value) || 0;
     b.y = parseInt(document.getElementById('bet-y').value) || 0;
     b.w = Math.max(1, parseInt(document.getElementById('bet-w').value) || 1);
     b.h = Math.max(1, parseInt(document.getElementById('bet-h').value) || 1);
+    if (state.hurtboxSyncMode && state.selectedCollisionBox?.type === 'hurtbox') _syncHurtboxes();
     saveToLocal(); drawMainCanvas();
     if (typeof window.__renderHitboxPanel === 'function') window.__renderHitboxPanel();
 }
 
 export function deleteSelectedBox() {
-    if (!state.selectedCollisionBox) return;
-    const tlf = getBoxesForCurrentFrame();
-    if (!tlf) return;
-    const arr = state.selectedCollisionBox.type === 'hitbox' ? tlf.hitboxes : tlf.hurtboxes;
-    if (arr) arr.splice(state.selectedCollisionBox.idx, 1);
+    const scb = state.selectedCollisionBox;
+    if (!scb) return;
+    if (scb.type === 'base_hurtbox') {
+        const anim = state.activeAnim ? state.animations[state.activeAnim] : null;
+        if (anim?.base_hurtboxes) anim.base_hurtboxes.splice(scb.idx, 1);
+    } else {
+        const tlf = getBoxesForCurrentFrame();
+        if (!tlf) return;
+        const arr = scb.type === 'hitbox' ? tlf.hitboxes : tlf.hurtboxes;
+        if (arr) arr.splice(scb.idx, 1);
+    }
     state.selectedCollisionBox = null;
     hideBoxEditTooltip(); saveToLocal(); drawMainCanvas();
     if (typeof window.__renderHitboxPanel === 'function') window.__renderHitboxPanel();

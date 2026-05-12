@@ -39,12 +39,15 @@ export function exportJSON() {
             const tl = a.timeline;
             output.animations[name] = {
                 type: 'held', fps: a.fps, next_anim: a.next_anim || null,
+                base_hurtboxes: a.base_hurtboxes?.length > 0 ? a.base_hurtboxes : undefined,  // añadir
                 phases: { intro: mapSeq(tl.slice(0,ls)), loop: mapSeq(tl.slice(ls,os)), outro: mapSeq(tl.slice(os)) }
             };
         } else {
             output.animations[name] = {
                 type: a.type, fps: a.fps, loop: a.type==='loop',
-                next_anim: a.next_anim || null, sequence: mapSeq(a.timeline)
+                next_anim: a.next_anim || null,
+                base_hurtboxes: a.base_hurtboxes?.length > 0 ? a.base_hurtboxes : undefined,  // añadir
+                sequence: mapSeq(a.timeline)
             };
         }
     }

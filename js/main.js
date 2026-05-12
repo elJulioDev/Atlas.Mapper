@@ -298,7 +298,16 @@ document.addEventListener('mouseup', e => {
                 if (!tlf.hitboxes)  tlf.hitboxes  = [];
                 if (!tlf.hurtboxes) tlf.hurtboxes = [];
                 if (state.currentMode === 'hitbox') tlf.hitboxes.push(box);
-                else                                tlf.hurtboxes.push(box);
+                else {
+                    tlf.hurtboxes.push(box);
+                    // Sync mode: propaga a todos los frames
+                    if (state.hurtboxSyncMode) {
+                        const copy = JSON.parse(JSON.stringify(tlf.hurtboxes));
+                        state.animations[state.activeAnim].timeline.forEach((t, i) => {
+                            if (i !== state.selectedTLIndex) t.hurtboxes = JSON.parse(JSON.stringify(copy));
+                        });
+                    }
+                }
                 saveToLocal();
                 if (document.getElementById('rp-tab-hitbox').classList.contains('tab-visible')) {
                     window.__renderHitboxPanel && window.__renderHitboxPanel();
@@ -438,6 +447,7 @@ Object.assign(window, {
     addAnimation, setActiveAnim, setMode,
     changeZoom, resetZoom, runAutoSlice,
     togglePlay, startHold, endHold, resetPreview,
+    showBoxEditTooltip, hideBoxEditTooltip,
     // Timeline
     duplicateActiveFrame, removeSelectedFrame,
     selectTLFrame, setPhaseMarker,

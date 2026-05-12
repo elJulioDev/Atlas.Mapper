@@ -25,6 +25,7 @@ export const state = {
     selectedCollisionBox: null, // { type: 'hitbox'|'hurtbox', idx }
     activeBoxType: null,
     activeProject: null,
+    hurtboxSyncMode: false,
 
     // Moveset
     movesetConfig: [],

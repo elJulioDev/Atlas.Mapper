@@ -130,9 +130,11 @@ export function renderTimelineStrip() {
 
         const thumbId  = 'th_' + idx + '_' + t.frameId;
         const durLabel = t.duration ? `<div class="tl-dur-badge">${t.duration}ms</div>` : '';
-        const boxDots  = [
-            hasHrt ? '<span class="tl-box-dot" style="background:#2ecc71;" title="Hurtbox"></span>' : '',
-            hasHit ? '<span class="tl-box-dot" style="background:#e74c3c;" title="Hitbox"></span>'  : ''
+        const usesBaseHrt = !hasHrt && anim.base_hurtboxes?.length > 0;
+        const boxDots = [
+            hasHrt    ? '<span class="tl-box-dot" style="background:#2ecc71;" title="Hurtbox frame"></span>' : '',
+            usesBaseHrt ? '<span class="tl-box-dot" style="background:#0d4020;border:1px dashed #2ecc71;" title="Hurtbox base"></span>' : '',
+            hasHit    ? '<span class="tl-box-dot" style="background:#e74c3c;" title="Hitbox"></span>' : ''
         ].join('');
 
         el.innerHTML = `
